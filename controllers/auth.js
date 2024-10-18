@@ -7,6 +7,7 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
 export const signup = async (req, res, next) => {
   const { error } = validateUser(req.body);
+  console.log(error);
 
   if (error) {
     return res.status(400).json({ message: 'user validation failed' });

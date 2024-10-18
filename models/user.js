@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Joi from 'joi';
+import { Doctor } from './doctor.js';
 
 const Schema = mongoose.Schema;
 
@@ -37,6 +38,10 @@ const userSchema = new Schema(
     },
     emergencyContactNumber: {
       type: 'String',
+    },
+    appointment: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Appointment',
     },
   },
   { timestamps: true }
