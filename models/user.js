@@ -39,10 +39,12 @@ const userSchema = new Schema(
     emergencyContactNumber: {
       type: 'String',
     },
-    appointment: {
-      type: mongoose.Types.ObjectId,
-      ref: 'Appointment',
-    },
+    appointments: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: 'Appointment',
+      },
+    ],
   },
   { timestamps: true }
 );

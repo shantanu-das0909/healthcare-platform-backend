@@ -15,7 +15,7 @@ export const isAuth = (req, res, next) => {
   try {
     decodedToken = jwt.verify(token, JWT_SECRET_KEY);
   } catch (err) {
-    res.status(500).json({ message: 'Token verification failed' });
+    res.status(500).json({ message: 'Not authenticated' });
   }
 
   if (!decodedToken) {

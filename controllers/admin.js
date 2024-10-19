@@ -1,5 +1,9 @@
 import { Appointment } from '../models/appointment.js';
 import { Doctor } from '../models/doctor.js';
+import {
+  addAppointmentToDoctor,
+  removeAppointmentFromDoctor,
+} from '../utils/helper.js';
 
 export const addDoctor = async (req, res, next) => {
   const { name } = req.body;
@@ -90,9 +94,11 @@ export const confirmOrCancelAppointment = async (req, res, next) => {
     }
 
     appointment.status = status;
+
     if (appointmentDate) {
       appointment.appointmentDate = appointmentDate;
     }
+
     // validate if cancellation reason is provide for CANCEL status
     if (status === 'CANCEL') {
       if (!cancelReason) {
@@ -107,39 +113,14 @@ export const confirmOrCancelAppointment = async (req, res, next) => {
     // to new doctors appointment bucket and
     // will be removed from current doctors appointment bucket
     if (doctorId && doctorId.toString() !== appointment.doctor._id.toString()) {
-      const doctor = await Doctor.findById(doctorId);
+      await addAppointmentToDoctor(doctorId, appointmentId);
 
-      if (!doctor) {
-        return res.status(400).json({ message: 'Doctor not found' });
-      }
-
-      // added to new docotrs appointment bucket
-      const oldAppointments = doctor.appointments;
-      if (!oldAppointments) {
-        doctor.appointments = [appointment];
-      } else {
-        if (!oldAppointments.includes(appointment._id)) {
-          doctor.appointments = [...oldAppointments, appointment];
-        }
-      }
-
-      await doctor.save();
-
-      // removed from current docotrs appointment bucket
-      const previousDoctor = await Doctor.findById(appointment.doctor._id);
-
-      let previousDoctorAppointments = previousDoctor.appointments;
-      const indexOfCurrentAppointment = previousDoctorAppointments.indexOf(
+      await removeAppointmentFromDoctor(
+        appointment.doctor._id,
         appointment._id
       );
-      if (indexOfCurrentAppointment > -1) {
-        previousDoctorAppointments.splice(indexOfCurrentAppointment, 1);
-      }
 
-      previousDoctor.appointments = previousDoctorAppointments;
-      await previousDoctor.save();
-
-      appointment.doctor = doctor;
+      appointment.doctor = doctorId;
     }
 
     const updatedAppoitment = await appointment.save();
