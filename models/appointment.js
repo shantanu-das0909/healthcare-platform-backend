@@ -15,6 +15,13 @@ const appointmentSchema = new Schema({
   comments: {
     type: 'string',
   },
+  status: {
+    type: 'string',
+    required: true,
+  },
+  cancelReason: {
+    type: 'string',
+  },
   doctor: {
     type: mongoose.Types.ObjectId,
     ref: 'Doctor',

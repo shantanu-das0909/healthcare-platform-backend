@@ -77,3 +77,80 @@ export const getAppointmentById = async (req, res, next) => {
     });
   }
 };
+
+export const confirmOrCancelAppointment = async (req, res, next) => {
+  const { appointmentDate, status, doctorId, cancelReason } = req.body;
+  const appointmentId = req.params.appointmentId;
+
+  try {
+    const appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment) {
+      return res.status(400).json({ message: 'Appointment not found' });
+    }
+
+    appointment.status = status;
+    if (appointmentDate) {
+      appointment.appointmentDate = appointmentDate;
+    }
+    // validate if cancellation reason is provide for CANCEL status
+    if (status === 'CANCEL') {
+      if (!cancelReason) {
+        return res
+          .status(400)
+          .json({ message: 'Please enter a appointment cancellation reason' });
+      }
+      appointment.cancelReason = cancelReason;
+    }
+
+    // if doctor is changed then this appointment will be moved
+    // to new doctors appointment bucket and
+    // will be removed from current doctors appointment bucket
+    if (doctorId && doctorId.toString() !== appointment.doctor._id.toString()) {
+      const doctor = await Doctor.findById(doctorId);
+
+      if (!doctor) {
+        return res.status(400).json({ message: 'Doctor not found' });
+      }
+
+      // added to new docotrs appointment bucket
+      const oldAppointments = doctor.appointments;
+      if (!oldAppointments) {
+        doctor.appointments = [appointment];
+      } else {
+        if (!oldAppointments.includes(appointment._id)) {
+          doctor.appointments = [...oldAppointments, appointment];
+        }
+      }
+
+      await doctor.save();
+
+      // removed from current docotrs appointment bucket
+      const previousDoctor = await Doctor.findById(appointment.doctor._id);
+
+      let previousDoctorAppointments = previousDoctor.appointments;
+      const indexOfCurrentAppointment = previousDoctorAppointments.indexOf(
+        appointment._id
+      );
+      if (indexOfCurrentAppointment > -1) {
+        previousDoctorAppointments.splice(indexOfCurrentAppointment, 1);
+      }
+
+      previousDoctor.appointments = previousDoctorAppointments;
+      await previousDoctor.save();
+
+      appointment.doctor = doctor;
+    }
+
+    const updatedAppoitment = await appointment.save();
+
+    res.status(200).json({
+      message: 'Appointment status updated successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Appointment status updation failed',
+      error: error.message,
+    });
+  }
+};

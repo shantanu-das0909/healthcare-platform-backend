@@ -2,6 +2,7 @@ import express from 'express';
 
 import {
   addDoctor,
+  confirmOrCancelAppointment,
   getAppointmentById,
   getAppointments,
   getDoctor,
@@ -16,5 +17,7 @@ router.get('/doctors/:id', getDoctor);
 router.get('/appointments', getAppointments);
 
 router.get('/appointments/:appointmentId', getAppointmentById);
+
+router.put('/appointments/:appointmentId', confirmOrCancelAppointment);
 
 export { router };

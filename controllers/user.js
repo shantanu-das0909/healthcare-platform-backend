@@ -23,6 +23,7 @@ export const requestNewAppointment = async (req, res, next) => {
       appointmentDate: appointmentDate,
       appointmentReason: appointmentReason,
       comments: comments,
+      status: 'PENDING',
       doctor: doctor,
       user: user,
     });
@@ -41,13 +42,11 @@ export const requestNewAppointment = async (req, res, next) => {
 
     await doctor.save();
 
-    res.status(201).json({
-      message: `Appointment requested by ${user._id} to ${doctor._id} doctor`,
-    });
+    res.status(201).json({ message: 'Appointment added successfully' });
   } catch (error) {
     res.status(500).json({
       message: 'New appointment failed. Please try again',
-      error: error,
+      error: error.message,
     });
   }
 };
